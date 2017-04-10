@@ -1,3 +1,7 @@
+## 1.3.2
+
+* Packaging fixes for travis releases to docker hub
+
 ## 1.3.1
 
 * Fix for k8s network lookup stacktrace

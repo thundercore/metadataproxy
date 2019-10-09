@@ -6,6 +6,7 @@ import socket
 import re
 import timeit
 import requests
+import ast
 
 # Import third party libs
 import boto3
@@ -239,7 +240,7 @@ def get_role_params_from_ip(ip, requested_role=None):
         if container:
             env = container['Config']['Env'] or []
             # Look up IAM_ROLE and IAM_EXTERNAL_ID values from environment
-            aws_id = thunder_role = aws_subnet_gid = aws_subnet_number = alloc_index = None
+            aws_id = chain_ns = chain_role = proposer_number = voter_number = alloc_index = aws_subnet = None
             for e in env:
                 key, val = split_envvar(e)
                 if key == 'IAM_ROLE':
@@ -250,19 +251,40 @@ def get_role_params_from_ip(ip, requested_role=None):
                 elif key == 'IAM_EXTERNAL_ID':
                     params['external_id'] = val
                 elif key == 'NOMAD_META_AWS_ACCOUNT_ID':
-                     aws_id = val
-                elif key == 'THUNDER_ROLE':
-                     thunder_role = val
-                elif key == 'NOMAD_META_AWS_SUBNET_GID':
-                     aws_subnet_gid = val
-                elif key == 'NOMAD_META_AWS_SUBNET_NUMBER':
-                     aws_subnet_number = val
+                    aws_id = val
+                elif key == 'NOMAD_META_CHAIN_NS':
+                    chain_ns = val
+                elif key == 'NOMAD_META_CHAIN_ROLE':
+                    chain_role = val
+                elif key == 'NOMAD_META_PORPOSER_NUMBER':
+                    proposer_number = val
+                elif key == 'NOMAD_META_VOTER_NUMBER':
+                    voter_number = val
                 elif key == 'NOMAD_ALLOC_INDEX':
-                     alloc_index = val
-            if aws_id and thunder_role and aws_subnet_gid and aws_subnet_number and alloc_index:
-                r_number = int(aws_subnet_number) * int(alloc_index) + int(aws_subnet_gid)
+                    alloc_index = val
+                elif key == 'NOMAD_META_AWS_SUBNET':
+                    aws_subnet = val
+            start_number = 0
+            if chain_role == 'proposer':
+                data = ast.literal_eval(proposer_number)
+                for key in sorted(data.keys()):
+                    if key != aws_subnet:
+                        start_number += int(data.get(key))
+                    else:
+                        break
+                chain_role = "accelerator"
+            elif chain_role == 'voter':
+                data = ast.literal_eval(voter_number)
+                for key in sorted(data.keys()):
+                    if key != aws_subnet:
+                        start_number += int(data.get(key))
+                    else:
+                        break
+                chain_role = "consensus"
+            if chain_ns and chain_role and alloc_index and aws_subnet:
+                r_number = start_number + int(alloc_index)
                 r_number = "%03d" % r_number
-                role_name = '{0}-{1}@{2}'.format(thunder_role, r_number, aws_id)
+                role_name = '{0}-{1}-{2}@{3}'.format(chain_ns, chain_role, r_number, aws_id)
             if not role_name:
                 msg = "Couldn't find IAM_ROLE variable. Returning DEFAULT_ROLE: {0}"
                 log.debug(msg.format(app.config['DEFAULT_ROLE']))

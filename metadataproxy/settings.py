@@ -86,7 +86,12 @@ DEFAULT_ACCOUNT_ID = str_env('DEFAULT_ACCOUNT_ID')
 #   role_name: myrole
 #   account_id: 12345
 AWS_ACCOUNT_MAP = json.loads(str_env('AWS_ACCOUNT_MAP', '{}'))
-
+# AWS Region to resolve region based STS service endpoint and to make calls against it.
+AWS_REGION = str_env('AWS_REGION')
+# The threshold before credentials expire in minutes at which metadataproxy will attempt
+# to load new credentials. The default in previous versions of metadataproxy was 5, but
+# we choose to make the new default 15 for better compatibility with aws-sdk-java.
+ROLE_EXPIRATION_THRESHOLD = int_env('ROLE_EXPIRATION_THRESHOLD', 15)
 # A json file that has a dict mapping of IP addresses to role names. Can be
 # used if docker networking has been disabled and you are managing IP
 # addressing for containers through another process.
@@ -107,6 +112,11 @@ MESOS_STATE_LOOKUP = bool_env('MESOS_STATE_LOOKUP', False)
 MESOS_STATE_URL = str_env('MESOS_STATE_URL', 'http://localhost:5051/state')
 # Timeout to use when calling the mesos state endpoint
 MESOS_STATE_TIMEOUT = int_env('MESOS_STATE_TIMEOUT', 2)
+
+# Patch botocore's allowed hosts for ContainerMetadataFetcher to support aws-vault's
+# --ecs-server option. This will inject docker for mac's URL for the host into the
+# allowed addresses botocore will talk to.
+PATCH_ECS_ALLOWED_HOSTS = str_env('PATCH_ECS_ALLOWED_HOSTS')
 
 # Sort policy of ID, value: "input" "subnet"
 # Ex: {'us-west-2b': '2', 'ap-northeast-1d': '1'}

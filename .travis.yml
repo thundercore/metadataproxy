@@ -1,22 +1,22 @@
 language: python
 python:
-  - "2.7"
+- '3.6'
 env:
-  - REPO=lyft/metadataproxy
+- REPO=lyft/metadataproxy
 sudo: required
 services:
-  - docker
+- docker
 before_install:
-  - docker build -f Dockerfile -t $REPO:$TRAVIS_COMMIT .
-install: "pip install -r requirements.txt"
+- docker build -f Dockerfile -t $REPO:$TRAVIS_COMMIT .
+install: pip install -r requirements.txt
 script: make test
 after_success:
-  - ./docker_push.sh
+- "./docker_push.sh"
 deploy:
   provider: pypi
-  user: lyftpypi
+  username: __token__
   password:
-    secure: RigAIMowmRVP7xGdra9mDu9aG2xmImxEQo5zOz1x6EP0xqMuSus+PEVbJAVLxpptElJx2FJpkYa5rNvNnrUuxVLaMxxgZE9bbleP8gKX/+/qt4ua+0pjpRMsvmxFzmJhwepMrWsvIwxQvk3lKlVcahZlXAlauP5lF5ocYtY7TBk4dtFYJdKtcPOwUCPezerQU+FLDom5yHeTT0D5AJb8N/9Z0KYdeJ163viSQxV8Q+VWX9mbUa3hjkHTJyCcRcZeXMAHRqvs2ZrZAK7hQNbJuPNZi4ikqAdABdnmZv/hAqhl4099Tydr+o/cwY/ckQQaOW2a58PXjqfD+eQV1vtbfydreAZowvjzn1Bctmt/Da4NZWZL2Nt/0ckssm+3yxKHb+UkTJyrQfC9QwoO7ChzrFkltvBvssZvBA6cN0mPFAPLtAD81b4BD14bp8+O+dordkHn/1R9Iw8Y5q7M6nEHKLYCCw2YDjmwb4CeOzdGN/8TtdBPBehKCoYIoKcduYMPiNmE6ydaP5e5L8FzRtivS7sI6DZmr+5lknA+rHjoQG8/GjV8SulsM4wwwTBFSTLwpmRmLyzNSq2jVdzksPzcp7PHBir0aWNWKG7TeL2Wzv97y6b1GAYkj+/LeXgrPgHmQQ7k1ph8bHZHSN8CwdnS4IUC5iAvOu27Y69znyObvzo=
+    secure: fanFwIpex+ZJw6dL9iR92/3S1piQpOzskDx9pSJoc4JU9JI++YYLDAhyZrr5uU6+sQDJr+IJllZMkGQIhknclH4R3IEqjuK11lpxiExr052urBMQmdO8dSTbpSG+OgwNP4rAnm5PDUYVXNSFHh6R37TL5ldYdY5ytOkSGcjN53DeictxXhr/W8/18PYVDTSW4ZcY68FSfK6dgCD6LP35UMo3yoU0zpjW5CwfUD1xWgOK2oU/hs/VqUG+y2fMC4rD4y6z2SUw9B3tdiXndj4FLxx6LMlsfDsND4f+4tAg2kC4SfjjpgG4CvtOT59uu+6bD1T9O08ne65IZ+qotKhULLlWLAOBacYGar5EYsCZdSM/tsrbior0p8pWLIm+Ez7uAQjxYLfIrtwtvFnvUjg+ulNeeLcRiJt0Mm7IfBGXIZs3skzhgq7tC2F6jOMNke3wfoO2eVPjgZiKBHDz1aDc1B5Djn6O/4mIll2TTKdc4WWbQNwhdsSEsD/XTBEKG44wj7SmDngWi5v108vcCDfan5jkyD8huOriPz/oHIX99T+WJeYHs/k6Dns/Q0z9kQYGCH64zhX3WvZb1whRQqmifX3BbmPGfTeW+iC2Nb7BVokhofCmRWwZgo1e02c0U1F3aM9pN1xO9AQjiwlUoOB76rZYzA18M4nAiU6CMAvI1uk=
   on:
     tags: true
     distributions: sdist bdist_wheel

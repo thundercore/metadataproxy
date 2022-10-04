@@ -267,20 +267,24 @@ def get_role_params_from_ip(ip, requested_role=None):
             start_number = 0
             if chain_role == 'proposer':
                 data = ast.literal_eval(proposer_number)
-                for key in sorted(data.keys()):
-                    if key != aws_subnet:
-                        start_number += int(data.get(key))
-                    else:
-                        break
                 chain_role = "accelerator"
             elif chain_role == 'voter':
                 data = ast.literal_eval(voter_number)
+                chain_role = "consensus"
+
+            if app.config['ROLE_SORT_POLICY'] == 'subnet':
                 for key in sorted(data.keys()):
                     if key != aws_subnet:
                         start_number += int(data.get(key))
                     else:
                         break
-                chain_role = "consensus"
+            else:
+                for key in data.keys():
+                    if key != aws_subnet:
+                        start_number += int(data.get(key))
+                    else:
+                        break
+
             if chain_ns and chain_role and alloc_index and aws_subnet:
                 r_number = start_number + int(alloc_index)
                 r_number = "%03d" % r_number

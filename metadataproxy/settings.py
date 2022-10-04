@@ -107,3 +107,15 @@ MESOS_STATE_LOOKUP = bool_env('MESOS_STATE_LOOKUP', False)
 MESOS_STATE_URL = str_env('MESOS_STATE_URL', 'http://localhost:5051/state')
 # Timeout to use when calling the mesos state endpoint
 MESOS_STATE_TIMEOUT = int_env('MESOS_STATE_TIMEOUT', 2)
+
+# Sort policy of ID, value: "input" "subnet"
+# Ex: {'us-west-2b': '2', 'ap-northeast-1d': '1'}
+#     input sort:
+#         us-west-2b-000
+#         us-west-2b-001
+#         ap-northeast-1d-002
+#     subnet sort:
+#         ap-northeast-1d-000
+#         us-west-2b-001
+#         us-west-2b-002
+ROLE_SORT_POLICY = str_env('ROLE_SORT_POLICY', 'input')

@@ -1,3 +1,25 @@
+## 2.2.0
+
+* Added `PATCH_ECS_ALLOWED_HOSTS` config setting, to support aws-vault's --ecs-server option
+
+## 2.1.0
+
+* Fix for the gunicorn logging run location in gunicorn.conf, when trying to catch an exception that only exists in python3.
+
+## 2.0.0
+
+* Though we don't expect this to be a breaking change, the default renewal time for IAM credentials has been changed from 5 minutes to 15 minutes, for better compatibility with aws-sdk-java. This time can be changed via the `ROLE_EXPIRATION_THRESHOLD` setting.
+
+## 1.11.0
+
+* Added PyYAML, python-json-logger, and blinker dependencies
+* Included a default gunicorn config and logging config
+* All logs are now sent to stdout by default, which should make flask logs available and written into the log file now
+
+## 1.10.0
+
+* Support assuming roles with a Path
+
 ## 1.9.1
 
 * Docker packaging issue fix

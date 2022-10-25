@@ -1,23 +1,26 @@
 # Import python libs
 import datetime
-import dateutil.tz
 import json
-import socket
+import logging
 import re
+import socket
 import timeit
 import requests
 import ast
 
 # Import third party libs
 import boto3
+import dateutil.tz
 import docker
 import docker.errors
+import requests
 from botocore.exceptions import ClientError
 from cachetools import cached, TTLCache
 
 # Import metadataproxy libs
 from metadataproxy import app
-from metadataproxy import log
+
+log = logging.getLogger(__name__)
 
 ROLES = {}
 CONTAINER_MAPPING = {}
@@ -81,7 +84,13 @@ def iam_client():
 def sts_client():
     global _sts_client
     if _sts_client is None:
-        _sts_client = boto3.client('sts')
+        aws_region = app.config.get('AWS_REGION')
+
+        _sts_client = boto3.client(
+            service_name='sts',
+            region_name=aws_region,
+            endpoint_url=f'https://sts.{aws_region}.amazonaws.com'
+        ) if aws_region else boto3.client(service_name='sts')
     return _sts_client
 
 
@@ -267,20 +276,24 @@ def get_role_params_from_ip(ip, requested_role=None):
             start_number = 0
             if chain_role == 'proposer':
                 data = ast.literal_eval(proposer_number)
-                for key in sorted(data.keys()):
-                    if key != aws_subnet:
-                        start_number += int(data.get(key))
-                    else:
-                        break
                 chain_role = "accelerator"
             elif chain_role == 'voter':
                 data = ast.literal_eval(voter_number)
+                chain_role = "consensus"
+
+            if app.config['ROLE_SORT_POLICY'] == 'subnet':
                 for key in sorted(data.keys()):
                     if key != aws_subnet:
                         start_number += int(data.get(key))
                     else:
                         break
-                chain_role = "consensus"
+            else:
+                for key in data.keys():
+                    if key != aws_subnet:
+                        start_number += int(data.get(key))
+                    else:
+                        break
+
             if chain_ns and chain_role and alloc_index and aws_subnet:
                 r_number = start_number + int(alloc_index)
                 r_number = "%03d" % r_number
@@ -362,7 +375,11 @@ def get_role_arn(role_params):
             iam = iam_client()
             try:
                 with PrintingBlockTimer('iam.get_role'):
-                    role = iam.get_role(RoleName=role_params['name'])
+                    if '/' in role_params['name']:
+                        path, name = role_params['name'].rsplit('/', 1)
+                        role = iam.get_role(Path=path + '/', RoleName=name)
+                    else:
+                        role = iam.get_role(RoleName=role_params['name'])
                     return role['Role']['Arn']
             except ClientError as e:
                 response = e.response['ResponseMetadata']
@@ -378,7 +395,7 @@ def get_assumed_role(role_params):
         assumed_role = ROLES[arn]
         expiration = assumed_role['Credentials']['Expiration']
         now = datetime.datetime.now(dateutil.tz.tzutc())
-        expire_check = now + datetime.timedelta(minutes=5)
+        expire_check = now + datetime.timedelta(minutes=app.config['ROLE_EXPIRATION_THRESHOLD'])
         if expire_check < expiration:
             return assumed_role
     with PrintingBlockTimer('sts.assume_role'):
